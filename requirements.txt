@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+opencv-python
+ultralytics
+streamlit
+mysql-connector-python
+pandas
+sqlalchemy
