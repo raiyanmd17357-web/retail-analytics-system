@@ -1,1 +1,73 @@
-print("Dashboard Started")
+import streamlit as st
+import pandas as pd
+from streamlit_autorefresh import st_autorefresh
+import mysql.connector
+
+# Page title
+st.set_page_config(page_title="Retail Analytics Dashboard", layout="wide")
+
+st.title("Retail Analytics Dashboard")
+st_autorefresh(interval=5000, key="refresh")
+
+# Connect to MySQL
+conn = mysql.connector.connect(
+    host="localhost",
+    user="root",
+    password="Raiyan@4328",
+    database="retail_analytics"
+)
+
+# Fetch data
+query = """
+SELECT * FROM visitors
+ORDER BY timestamp DESC
+LIMIT 50;
+"""
+
+df = pd.read_sql(query, conn)
+
+# Metrics
+total_records = len(df)
+
+latest_people = 0
+latest_objects = 0
+
+if not df.empty:
+    latest_people = df.iloc[0]["people_count"]
+    latest_objects = df.iloc[0]["object_count"]
+
+# Show metrics
+col1, col2, col3 = st.columns(3)
+
+col1.metric("Total Records", total_records)
+col2.metric("Latest People Count", latest_people)
+col3.metric("Latest Object Count", latest_objects)
+
+st.subheader("Recent Detection Data")
+
+st.dataframe(df.head(20))
+conn.close()
+
+st.subheader("Visitor Trend")
+
+chart_data = df[["timestamp", "people_count"]].tail(20)
+chart_data = chart_data.sort_values(by="timestamp")
+
+st.line_chart(
+    chart_data.set_index("timestamp")
+)
+
+st.subheader("Object Detection Frequency")
+
+filtered_df = df[df["detected_objects"] != "None"]
+object_counts = filtered_df["detected_objects"].value_counts()
+
+st.bar_chart(object_counts)
+
+total_visitors = df["people_count"].sum()
+
+st.metric("Total Visitors", total_visitors)
+
+peak_crowd = df["people_count"].max()
+
+st.metric("Peak Crowd", peak_crowd)

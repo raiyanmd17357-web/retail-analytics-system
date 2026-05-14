@@ -1,10 +1,23 @@
+import mysql.connector
+from datetime import datetime
 import cv2
+import time
 from ultralytics import YOLO
 
 print("Retail Analytics Detection Started...")
 
 # Load YOLO model (better accuracy)
 model = YOLO("yolov8s.pt")
+
+conn = mysql.connector.connect(
+    host="localhost",
+    user="root",
+    password="Raiyan@4328",
+    database="retail_analytics"
+)
+
+cursor = conn.cursor()
+last_saved_time = 0
 
 # Open webcam (recommended for Windows)
 cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
@@ -19,20 +32,27 @@ print("Webcam opened successfully.")
 cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
 
+frame_count = 0
+counted_ids = set()
 while True:
     # Read frame
     ret, frame = cap.read()
+    frame_count += 1
+
+    if frame_count % 2 != 0:
+        continue
 
     if not ret:
         print("Error: Failed to capture frame.")
         break
 
     # Run detection on all supported classes
-    results = model(
-        frame,
-        conf=0.60,
-        imgsz=416,
-        verbose=False
+    results = model.track(
+    frame,
+    persist=True,
+    conf=0.60,
+    imgsz=416,
+    verbose=False
     )
 
     # Separate counters
@@ -58,9 +78,18 @@ while True:
             class_id = int(box.cls[0])
             class_name = model.names[class_id]
 
+            track_id = None
+
+            if box.id is not None:
+                track_id = int(box.id[0])
+
             # Person detection
             if class_name == "person":
-                customer_count += 1
+
+                if track_id is not None and track_id not in counted_ids:
+                    counted_ids.add(track_id)
+                    customer_count += 1
+
                 person_number += 1
 
                 # Labels: Person 1, Person 2, ...
@@ -99,6 +128,26 @@ while True:
     # Remove duplicate object names for summary display
     unique_objects = sorted(set(detected_object_names))
     object_names_text = ", ".join(unique_objects) if unique_objects else "None"
+
+    query = """
+    INSERT INTO visitors
+    (people_count, object_count, detected_objects, timestamp)
+    VALUES (%s, %s, %s, %s)
+    """
+
+    values = (
+        customer_count,
+        object_count,
+        object_names_text,
+        datetime.now()
+    )
+
+    current_time = time.time()
+
+    if current_time - last_saved_time > 5:
+        cursor.execute(query, values)
+        conn.commit()
+        last_saved_time = current_time
 
     # Display separate counts
     cv2.putText(
@@ -151,10 +200,15 @@ while True:
     cv2.imshow("Retail Analytics - Customer and Object Detection", frame)
 
     # Quit when Q is pressed
-    if cv2.waitKey(1) & 0xFF == ord("q"):
+    if cv2.waitKey(10) & 0xFF == ord("q"):
         print("Closing application...")
         break
 
 # Release resources
+print("Closing application...")
+
+cursor.close()
+conn.close()
+
 cap.release()
 cv2.destroyAllWindows()
