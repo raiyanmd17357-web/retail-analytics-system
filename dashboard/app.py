@@ -9,22 +9,11 @@ st.set_page_config(page_title="Retail Analytics Dashboard", layout="wide")
 st.title("Retail Analytics Dashboard")
 st_autorefresh(interval=5000, key="refresh")
 
-# Connect to MySQL
-conn = mysql.connector.connect(
-    host="localhost",
-    user="root",
-    password="Raiyan@4328",
-    database="retail_analytics"
-)
+df = pd.read_csv("../data.csv")
 
-# Fetch data
-query = """
-SELECT * FROM visitors
-ORDER BY timestamp DESC
-LIMIT 50;
-"""
 
-df = pd.read_sql(query, conn)
+df["timestamp"] = pd.to_datetime(df["timestamp"])
+
 
 # Metrics
 total_records = len(df)
