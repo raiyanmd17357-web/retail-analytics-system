@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 from streamlit_autorefresh import st_autorefresh
-import mysql.connector
 
 # Page title
 st.set_page_config(page_title="Retail Analytics Dashboard", layout="wide")
@@ -9,8 +8,7 @@ st.set_page_config(page_title="Retail Analytics Dashboard", layout="wide")
 st.title("Retail Analytics Dashboard")
 st_autorefresh(interval=5000, key="refresh")
 
-df = pd.read_csv("../data.csv")
-
+df = pd.read_csv("data.csv")
 
 df["timestamp"] = pd.to_datetime(df["timestamp"])
 
@@ -35,7 +33,6 @@ col3.metric("Latest Object Count", latest_objects)
 st.subheader("Recent Detection Data")
 
 st.dataframe(df.head(20))
-conn.close()
 
 st.subheader("Visitor Trend")
 
