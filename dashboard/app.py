@@ -5,7 +5,11 @@ from streamlit_autorefresh import st_autorefresh
 # Page title
 st.set_page_config(page_title="Retail Analytics Dashboard", layout="wide")
 
-st.title("Retail Analytics Dashboard")
+st.markdown("""
+# 🛍️ Retail Analytics Dashboard
+### AI-Powered Store Monitoring System
+---
+""")
 st_autorefresh(interval=5000, key="refresh")
 
 df = pd.read_csv("data.csv")
@@ -26,14 +30,14 @@ if not df.empty:
 # Show metrics
 col1, col2, col3 = st.columns(3)
 
-col1.metric("Total Records", total_records)
-col2.metric("Latest People Count", latest_people)
-col3.metric("Latest Object Count", latest_objects)
+col1.metric("📊 Total Records", total_records)
+col2.metric("👥 Current People", latest_people)
+col3.metric("📦 Objects Detected", latest_objects)
 
-st.subheader("Recent Detection Data")
+st.markdown("---")
+st.markdown("### 📋 Recent Detection Data")
 
-st.dataframe(df.head(20))
-
+st.dataframe(df.head(20), use_container_width=True)
 st.subheader("Visitor Trend")
 
 chart_data = df[["timestamp", "people_count"]].tail(20)
@@ -52,8 +56,10 @@ st.bar_chart(object_counts)
 
 total_visitors = df["people_count"].sum()
 
-st.metric("Total Visitors", total_visitors)
 
 peak_crowd = df["people_count"].max()
 
-st.metric("Peak Crowd", peak_crowd)
+col4, col5 = st.columns(2)
+
+col4.metric("🚶 Total Visitors", total_visitors)
+col5.metric("🔥 Peak Crowd", peak_crowd)
