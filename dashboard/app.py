@@ -12,7 +12,33 @@ st.markdown("""
 """)
 st_autorefresh(interval=5000, key="refresh")
 
-df = pd.read_csv("data.csv")
+st.sidebar.title("🔧 Controls")
+
+st.sidebar.markdown("""
+**Project Info**
+- Model: YOLOv8
+- Data Source: CSV
+- Refresh: 5 sec
+""")
+
+use_local_db = False  # change to True for local MySQL
+
+if use_local_db:
+    import mysql.connector
+
+    conn = mysql.connector.connect(
+        host="localhost",
+        user="root",
+        password="Raiyan@4328",
+        database="retail_analytics"
+    )
+
+    query = "SELECT * FROM visitors ORDER BY timestamp DESC LIMIT 50;"
+    df = pd.read_sql(query, conn)
+    conn.close()
+
+else:
+    df = pd.read_csv("data.csv")
 
 df["timestamp"] = pd.to_datetime(df["timestamp"])
 
