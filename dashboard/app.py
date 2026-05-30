@@ -17,11 +17,11 @@ st.sidebar.title("🔧 Controls")
 st.sidebar.markdown("""
 **Project Info**
 - Model: YOLOv8
-- Data Source: CSV
+- Data Source: MySQL
 - Refresh: 5 sec
 """)
 
-use_local_db = False  # change to True for local MySQL
+use_local_db = True  # change to True for local MySQL
 
 if use_local_db:
     import mysql.connector
@@ -40,8 +40,7 @@ if use_local_db:
 else:
     df = pd.read_csv("data.csv")
 
-df["timestamp"] = pd.to_datetime(df["timestamp"])
-
+df = df.sort_values(by="timestamp", ascending=False)
 
 # Metrics
 total_records = len(df)
